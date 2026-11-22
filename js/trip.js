@@ -1,7 +1,7 @@
 // Lógica del viaje: qué día es, dónde dormimos, cuál es el próximo vuelo.
 // Las fechas de calendario son cadenas 'AAAA-MM-DD'. Las horas de vuelo llevan su zona
 // (p. ej. '2026-01-10T02:25:00+03:00'), así que la hora local del lugar es el propio texto.
-import { getAll } from './db.js';
+import { getAll, getSetting } from './db.js';
 import { localISODate } from './utils.js';
 
 // ===== Momento actual =====
@@ -69,7 +69,9 @@ export async function loadTrip() {
   const totalDays = start && end ? diffDays(start, end) + 1 : 0;
   const home = flights[0]?.from ?? null;
 
-  return { flights, stays, items, start, end, totalDays, home };
+  const insurance = await getSetting('insurance', null);
+
+  return { flights, stays, items, start, end, totalDays, home, insurance };
 }
 
 /** 'antes' | 'durante' | 'despues' | 'vacio' */

@@ -5,7 +5,7 @@ import {
   addDays, diffDays, fmtDate, fmtDateShort, fmtTime, tzName, cityName,
 } from '../trip.js';
 import { esc } from '../utils.js';
-import { flightCard, flightStatus, stayCard, showTaxi } from '../components.js';
+import { flightCard, flightStatus, stayCard, showTaxi, insuranceCard } from '../components.js';
 
 const TYPE_LABEL = { plan: 'Plan', reserva: 'Reserva', nota: 'Nota' };
 
@@ -98,6 +98,8 @@ function before(trip, at) {
       </ul>
     </section>
 
+    ${trip.insurance ? insuranceCard(trip.insurance, { compact: true }) : ''}
+
     <section class="card">
       <h2 class="card-title">Antes de salir</h2>
       <ul class="todo-list">
@@ -134,7 +136,8 @@ function during(trip, at, date) {
     ${day.tonight ? stayCard(day.tonight, { title: 'Esta noche' }) : nightCard(day.night)}
     ${agendaCard(day)}
     ${tomorrow ? tomorrowLine(tomorrow) : ''}
-    ${nf && !flightSoon ? nfCard : ''}`;
+    ${nf && !flightSoon ? nfCard : ''}
+    ${trip.insurance ? insuranceCard(trip.insurance, { compact: true }) : ''}`;
 }
 
 function after(trip) {

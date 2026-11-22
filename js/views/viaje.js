@@ -2,18 +2,19 @@
 import {
   loadTrip, now, todayISO, phaseOf, describeDay, addDays, fmtDateShort, fmtTime, cityName,
 } from '../trip.js';
-import { put, remove, DATA_EVENT } from '../db.js';
+import { put, remove, setSetting, DATA_EVENT } from '../db.js';
 import { esc, uid, toast } from '../utils.js';
 import { backupCard } from '../backup.js';
 import { openForm } from '../form.js';
 import {
-  flightCard, flightStatus, stayCard, showTaxi, showPlace, safeUrl, mapsUrl,
+  flightCard, flightStatus, stayCard, showTaxi, showPlace, safeUrl, mapsUrl, insuranceCard,
 } from '../components.js';
 
 const SUBTABS = [
   ['itinerario', 'Itinerario'],
   ['vuelos', 'Vuelos'],
-  ['alojamientos', 'Alojamientos'],
+  ['alojamientos', 'Hoteles'],
+  ['seguro', 'Seguro'],
   ['datos', 'Datos'],
 ];
 const TYPES = [
@@ -99,6 +100,7 @@ function render() {
   switch (state.sub) {
     case 'vuelos': view.innerHTML = flightsHTML(); break;
     case 'alojamientos': view.innerHTML = staysHTML(); break;
+    case 'seguro': view.innerHTML = insuranceHTML(); break;
     case 'datos': view.append(backupCard()); break;
     default: view.innerHTML = itineraryHTML();
   }
@@ -259,6 +261,7 @@ function onClick(e) {
     case 'edit-flight': editFlight(trip.flights.find(f => f.id === id)); break;
     case 'add-stay': editStay(null); break;
     case 'edit-stay': editStay(trip.stays.find(s => s.id === id)); break;
+    case 'edit-insurance': editInsurance(trip.insurance); break;
   }
 }
 
@@ -368,6 +371,51 @@ function editFlight(f) {
       toast('Vuelo borrado');
     },
     deleteConfirm: `¿Borrar el vuelo ${f?.code ?? ''}? No se puede deshacer.`,
+  });
+}
+
+// --- Seguro ---
+
+function insuranceHTML() {
+  if (!trip.insurance) {
+    return `<section class="card">
+      <h2 class="card-title">Seguro de viaje</h2>
+      <p class="muted small">Guarda aquí la póliza y el teléfono de asistencia para tenerlos a mano.
+        Se incluye en la copia de seguridad.</p>
+      <div class="btn-row"><button type="button" class="btn-primary" data-act="edit-insurance">＋ Añadir seguro</button></div>
+    </section>`;
+  }
+  return insuranceCard(trip.insurance, {
+    actions: '<button type="button" data-act="edit-insurance">Editar</button>',
+  });
+}
+
+function editInsurance(ins) {
+  const isNew = !ins;
+  openForm({
+    title: isNew ? 'Añadir seguro' : 'Editar seguro',
+    values: ins ?? {},
+    fields: [
+      { name: 'company', label: 'Compañía', required: true, half: true, placeholder: 'Heymondo' },
+      { name: 'product', label: 'Producto', half: true, placeholder: 'Viaje top' },
+      { name: 'policy', label: 'Número de póliza', required: true },
+      { name: 'phone', label: 'Teléfono de asistencia 24 h', type: 'tel', required: true, placeholder: '+34 …' },
+      { name: 'insurer', label: 'Aseguradora', placeholder: 'Quien da la cobertura' },
+      { name: 'start', label: 'Desde', type: 'date', half: true },
+      { name: 'end', label: 'Hasta', type: 'date', half: true },
+      { name: 'travelers', label: 'Viajeros', half: true, placeholder: '2' },
+      { name: 'notes', label: 'Notas', type: 'textarea', placeholder: 'Coberturas, app, médico online…' },
+    ],
+    validate: (v) => (v.start && v.end && v.end < v.start ? 'La fecha final debe ser posterior a la inicial.' : null),
+    onSave: async (v) => {
+      await setSetting('insurance', v);
+      toast(isNew ? 'Seguro añadido' : 'Seguro guardado');
+    },
+    onDelete: isNew ? null : async () => {
+      await remove('settings', 'insurance');
+      toast('Seguro borrado');
+    },
+    deleteConfirm: '¿Borrar los datos del seguro? No se puede deshacer.',
   });
 }
 

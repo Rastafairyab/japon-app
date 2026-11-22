@@ -92,6 +92,36 @@ export function flightCard(f, { title = '', chip = '', air = false, past = false
     </section>`;
 }
 
+// ===== Seguro de viaje =====
+
+/**
+ * Tarjeta del seguro: compañía, póliza y botón para llamar a asistencia.
+ * @param {object} ins  { company, product, policy, insurer, phone, start, end, travelers, notes }
+ * @param {object} [o]  { compact (solo lo esencial), actions (HTML) }
+ */
+export function insuranceCard(ins, { compact = false, actions = '' } = {}) {
+  const tel = String(ins.phone ?? '').replace(/[^\d+]/g, '');
+  const dates = ins.start && ins.end ? `${fmtDateShort(ins.start)} → ${fmtDateShort(ins.end)}` : '';
+  const meta = [dates, ins.travelers && `${ins.travelers} viajeros`].filter(Boolean);
+  return `
+    <section class="card insurance-card">
+      <div class="card-head">
+        <h2 class="card-title">Seguro de viaje</h2>
+        ${ins.product ? `<span class="chip">${esc(ins.product)}</span>` : ''}
+      </div>
+      <p class="stay-name">${esc(ins.company || 'Seguro')}</p>
+      ${ins.policy ? `<p class="small">Póliza <strong class="policy-number">${esc(ins.policy)}</strong></p>` : ''}
+      ${!compact && ins.insurer ? `<p class="small muted">Aseguradora: ${esc(ins.insurer)}</p>` : ''}
+      ${!compact && meta.length ? `<p class="small muted">${meta.map(esc).join(' · ')}</p>` : ''}
+      ${!compact && ins.notes ? `<p class="small muted pre">${esc(ins.notes)}</p>` : ''}
+      <div class="btn-row">
+        ${tel ? `<a class="btn btn-primary" href="tel:${esc(tel)}">📞 Llamar a asistencia 24 h</a>` : ''}
+        ${actions}
+      </div>
+      ${tel ? `<p class="muted small">${esc(ins.phone)} · desde Japón, marca el número completo con el prefijo.</p>` : ''}
+    </section>`;
+}
+
 // ===== Alojamientos =====
 
 /**
