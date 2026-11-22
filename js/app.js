@@ -35,8 +35,8 @@ const TABS = {
   hoy:      { title: 'Hoy',      load: () => import('./views/hoy.js') },
   frases:   { title: 'Frases',   load: () => import('./views/frases.js') },
   viaje:    { title: 'Viaje',    load: () => import('./views/viaje.js') },
-  mapa:     { title: 'Mapa',     load: () => import('./views/proximamente.js').then(m => m.mapa) },
-  traducir: { title: 'Traducir', load: () => import('./views/proximamente.js').then(m => m.traducir) },
+  mapa:     { title: 'Mapa',     load: () => import('./views/mapa.js') },
+  traducir: { title: 'Traducir', load: () => import('./views/traducir.js') },
 };
 const DEFAULT_TAB = 'hoy';
 

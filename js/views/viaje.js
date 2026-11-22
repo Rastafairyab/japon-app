@@ -5,6 +5,7 @@ import {
 import { put, remove, setSetting, DATA_EVENT } from '../db.js';
 import { esc, uid, toast } from '../utils.js';
 import { backupCard } from '../backup.js';
+import { coordsFromUrl } from '../geo.js';
 import { openForm } from '../form.js';
 import {
   flightCard, flightStatus, stayCard, showTaxi, showPlace, safeUrl, mapsUrl, insuranceCard,
@@ -297,7 +298,14 @@ function editItem(item, date) {
     ],
     validate: (v) => (v.link && !safeUrl(v.link) ? 'El enlace debe empezar por https://' : null),
     onSave: async (v) => {
-      await put('items', { ...(item ?? {}), ...v, id: item?.id ?? uid(), updatedAt: new Date().toISOString() });
+      const rec = { ...(item ?? {}), ...v, id: item?.id ?? uid(), updatedAt: new Date().toISOString() };
+      // Posición en el mapa: del enlace de Google Maps si la trae; si cambia el lugar, se olvida la anterior.
+      const fromLink = coordsFromUrl(v.link);
+      if (fromLink) Object.assign(rec, fromLink);
+      else if (item && (item.place !== v.place || item.placeJa !== v.placeJa || item.link !== v.link)) {
+        delete rec.lat; delete rec.lng;
+      }
+      await put('items', rec);
       state.open.add(v.date);
       toast(isNew ? 'Añadido' : 'Guardado');
     },
@@ -443,7 +451,10 @@ function editStay(s) {
     ],
     validate: (v) => (v.checkOut <= v.checkIn ? 'La salida debe ser posterior a la llegada.' : null),
     onSave: async (v) => {
-      await put('stays', { ...(s ?? {}), ...v, id: s?.id ?? uid(), edited: true });
+      const rec = { ...(s ?? {}), ...v, id: s?.id ?? uid(), edited: true };
+      // Si cambia la dirección, la posición guardada en el mapa ya no vale.
+      if (s && (s.addressJa !== v.addressJa || s.address !== v.address)) { delete rec.lat; delete rec.lng; }
+      await put('stays', rec);
       toast(isNew ? 'Alojamiento añadido' : 'Alojamiento guardado');
     },
     onDelete: isNew ? null : async () => {

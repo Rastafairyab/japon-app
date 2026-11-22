@@ -13,7 +13,11 @@ añaden en la pestaña Viaje o se cargan desde un archivo JSON con **Viaje → D
   buscador, modo «enseñar» a pantalla completa y repaso con tarjetas.
 - **Viaje**: itinerario editable, vuelos, alojamientos (con «Enseñar al taxista») y copia
   de seguridad en JSON.
-- **Mapa** y **Traducir**: próximamente.
+- **Mapa**: hoteles y planes en un mapa de OpenStreetMap (Leaflet), tu ubicación, «Cómo llegar»
+  con Google Maps y «Situar» un lugar buscando su dirección (buscador del Instituto Geográfico de
+  Japón, con confirmación). Las zonas vistas con conexión se guardan para verlas sin internet.
+- **Traducir**: español ⇄ japonés escribiendo o dictando (MyMemory, necesita internet), con
+  «Enseñar» a pantalla completa, voz, frases guardadas parecidas (sin conexión) y atajo a Google Traductor.
 
 HTML, CSS y JavaScript sin frameworks ni dependencias. Los datos se guardan en el móvil
 (IndexedDB); no hay servidor.
