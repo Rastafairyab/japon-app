@@ -44,9 +44,10 @@ const viewEl = document.getElementById('view');
 const titleEl = document.getElementById('screen-title');
 
 let current = null;      // { name, view }
-let navToken = 0;        // evita carreras si se cambia de pestaña muy rápido
+let navToken = 0;        // la navegación más reciente
+let navQueue = Promise.resolve();   // las pantallas se montan de una en una, nunca a la vez
 
-async function show(name) {
+function show(name) {
   if (!TABS[name]) name = DEFAULT_TAB;
   const token = ++navToken;
 
@@ -56,15 +57,22 @@ async function show(name) {
   });
   titleEl.textContent = TABS[name].title;
 
+  navQueue = navQueue.then(() => mountTab(name, token));
+  return navQueue;
+}
+
+async function mountTab(name, token) {
+  if (token !== navToken) return;   // ya se ha pedido otra pestaña: esta se salta
   try {
     const mod = await TABS[name].load();
     if (token !== navToken) return;
     current?.view.unmount?.();
+    current = null;
     viewEl.replaceChildren();
     window.scrollTo(0, 0);
     const view = mod.default ?? mod;
-    await view.mount(viewEl);
     current = { name, view };
+    await view.mount(viewEl);
   } catch (err) {
     console.error(err);
     viewEl.innerHTML = '<div class="card">No se pudo cargar esta pantalla.</div>';
