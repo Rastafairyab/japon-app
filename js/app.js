@@ -37,6 +37,7 @@ const TABS = {
   viaje:    { title: 'Viaje',    load: () => import('./views/viaje.js') },
   mapa:     { title: 'Mapa',     load: () => import('./views/mapa.js') },
   traducir: { title: 'Traducir', load: () => import('./views/traducir.js') },
+  moneda:   { title: 'Moneda',   load: () => import('./views/moneda.js') },
 };
 const DEFAULT_TAB = 'hoy';
 
