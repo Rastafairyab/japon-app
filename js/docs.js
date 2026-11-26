@@ -8,6 +8,51 @@ function fmtSize(bytes) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+// PDF.js (visor de PDF dentro de la app). Se carga solo la primera vez y el
+// service worker lo guarda para usarlo sin conexión.
+const PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
+let pdfjsPromise = null;
+
+function loadPdfJs() {
+  if (!pdfjsPromise) {
+    pdfjsPromise = new Promise((resolve, reject) => {
+      if (window.pdfjsLib) return resolve(window.pdfjsLib);
+      const s = document.createElement('script');
+      s.src = PDFJS + 'pdf.min.js';
+      s.onload = () => {
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS + 'pdf.worker.min.js';
+        resolve(window.pdfjsLib);
+      };
+      s.onerror = () => { pdfjsPromise = null; s.remove(); reject(new Error('No se pudo cargar el visor de PDF')); };
+      document.head.append(s);
+    });
+  }
+  return pdfjsPromise;
+}
+
+// Pinta todas las páginas del PDF como imágenes (canvas) dentro de `box`.
+async function renderPdf(doc, box, isClosed) {
+  const pdfjsLib = await loadPdfJs();
+  const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(await doc.blob.arrayBuffer()) }).promise;
+  const width = Math.min(box.clientWidth || window.innerWidth, 1200);
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  box.innerHTML = '';
+  for (let n = 1; n <= pdf.numPages; n++) {
+    if (isClosed()) break;
+    const page = await pdf.getPage(n);
+    const base = page.getViewport({ scale: 1 });
+    // Resolución extra (×2) para que se lea bien al ampliar (QR, letra pequeña).
+    const viewport = page.getViewport({ scale: (width / base.width) * dpr * 2 });
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.floor(viewport.width);
+    canvas.height = Math.floor(viewport.height);
+    canvas.setAttribute('aria-label', `Página ${n} de ${pdf.numPages}`);
+    box.append(canvas);
+    await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+  }
+  pdf.destroy();
+}
+
 function openViewer(doc) {
   const url = URL.createObjectURL(doc.blob);
   const isPdf = doc.type === 'application/pdf';
@@ -16,20 +61,45 @@ function openViewer(doc) {
   overlay.innerHTML = `
     <div class="doc-viewer-bar">
       <span class="doc-viewer-name">${esc(doc.name)}</span>
-      <a href="${url}" target="_blank" rel="noopener">Abrir fuera</a>
+      <button type="button" data-zoom="-1" aria-label="Alejar">−</button>
+      <button type="button" data-zoom="1" aria-label="Ampliar">＋</button>
       <button type="button" class="doc-viewer-close" aria-label="Cerrar">✕</button>
     </div>
-    ${isPdf ? `<iframe src="${url}" title="${esc(doc.name)}"></iframe>` : `<img src="${url}" alt="${esc(doc.name)}">`}`;
+    <div class="doc-pages">${isPdf
+      ? '<p class="doc-pages-msg">Cargando…</p>'
+      : `<img src="${url}" alt="${esc(doc.name)}">`}</div>`;
+
+  const pages = overlay.querySelector('.doc-pages');
+  let zoom = 1;
+  let closed = false;
+  const applyZoom = () => pages.style.setProperty('--zoom', `${zoom * 100}%`);
 
   const close = () => {
+    closed = true;
     overlay.remove();
     document.removeEventListener('keydown', onKey);
     URL.revokeObjectURL(url);
   };
   const onKey = (e) => { if (e.key === 'Escape') close(); };
   overlay.querySelector('.doc-viewer-close').addEventListener('click', close);
+  overlay.querySelector('.doc-viewer-bar').addEventListener('click', (e) => {
+    const step = Number(e.target.closest('[data-zoom]')?.dataset.zoom);
+    if (!step) return;
+    zoom = Math.min(4, Math.max(1, zoom + step * 0.5));
+    applyZoom();
+  });
   document.addEventListener('keydown', onKey);
   document.body.append(overlay);
+  applyZoom();
+
+  if (isPdf) {
+    renderPdf(doc, pages, () => closed).catch(err => {
+      console.error(err);
+      if (closed) return;
+      pages.innerHTML = `<p class="doc-pages-msg">No se pudo mostrar el PDF${navigator.onLine ? '' : ' (la primera vez hace falta conexión para cargar el visor)'}.
+        <br><a href="${url}" target="_blank" rel="noopener">Abrir con otra app</a></p>`;
+    });
+  }
 }
 
 export function docsCard() {

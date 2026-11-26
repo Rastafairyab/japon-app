@@ -1,7 +1,7 @@
 // Service worker: guarda la app en caché para usarla sin conexión.
 // IMPORTANTE: cada vez que cambies cualquier archivo, sube el número de versión
 // para que los móviles descarguen la nueva versión.
-const VERSION = 'v18';
+const VERSION = 'v19';
 const CACHE = `japon-${VERSION}`;
 
 // Cachés que sobreviven a las versiones de la app:
@@ -68,7 +68,7 @@ self.addEventListener('fetch', event => {
     return;
   }
   // Leaflet: no cambia (versión fija), así que caché primero.
-  if (url.hostname === 'cdnjs.cloudflare.com' && url.pathname.includes('/leaflet/')) {
+  if (url.hostname === 'cdnjs.cloudflare.com' && (url.pathname.includes('/leaflet/') || url.pathname.includes('/pdf.js/'))) {
     event.respondWith(caches.open(LIBS).then(c => c.match(req).then(hit => hit || fetch(req).then(res => {
       if (res.ok) c.put(req, res.clone());
       return res;

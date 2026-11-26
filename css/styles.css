@@ -543,9 +543,11 @@ button:active, .btn:active { transform: scale(.98); }
 .doc-viewer-bar{display:flex;align-items:center;gap:10px;padding:calc(8px + env(safe-area-inset-top)) 12px 8px;background:#111318;color:#eee}
 .doc-viewer-bar a{color:#9cf}
 .doc-viewer-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.doc-viewer iframe,.doc-viewer img{flex:1;width:100%;border:0;min-height:0}
-.doc-viewer iframe{background:#fff}
-.doc-viewer img{object-fit:contain}
+.doc-viewer-bar button{min-width:40px}
+.doc-pages{flex:1;min-height:0;overflow:auto;background:#333;-webkit-overflow-scrolling:touch}
+.doc-pages canvas,.doc-pages img{display:block;width:var(--zoom,100%);max-width:none;height:auto;margin:0 auto 8px;background:#fff}
+.doc-pages-msg{color:#eee;text-align:center;padding:2rem 1rem}
+.doc-pages-msg a{color:#9cf}
 .doc-list{list-style:none;padding:0;margin:.75rem 0 0}
 .doc-row{display:flex;align-items:center;gap:.5rem;padding:.5rem 0;border-top:1px solid var(--border)}
 .doc-info{flex:1;min-width:0;display:flex;flex-direction:column}
