@@ -1,6 +1,6 @@
 // Tarjeta "Documentos": PDF e imágenes guardados solo en este móvil (IndexedDB).
 // No se suben a ningún sitio ni van en la copia de seguridad.
-import { listDocs, addDoc, getDoc, deleteDoc, requestPersistence } from './db.js';
+import { listDocs, addDoc, getDoc, deleteDoc, renameDoc, requestPersistence } from './db.js';
 import { esc, toast } from './utils.js';
 
 function fmtSize(bytes) {
@@ -126,6 +126,7 @@ export function docsCard() {
             <span class="muted small">${fmtSize(d.size)}</span>
           </div>
           <button type="button" data-act="open">Abrir</button>
+          <button type="button" data-act="rename">Renombrar</button>
           <button type="button" class="btn-danger" data-act="del">Borrar</button>
         </li>`).join('')
       : '<li class="muted small">Aún no hay documentos.</li>';
@@ -142,6 +143,14 @@ export function docsCard() {
       } else if (act === 'open') {
         const doc = await getDoc(id);
         if (doc) openViewer(doc);
+      } else if (act === 'rename') {
+        const doc = await getDoc(id);
+        if (!doc) return;
+        const name = prompt('Nuevo nombre del documento', doc.name)?.trim();
+        if (!name || name === doc.name) return;
+        await renameDoc(id, name);
+        toast('Nombre cambiado');
+        render();
       } else if (act === 'del') {
         const doc = await getDoc(id);
         if (!doc || !confirm(`¿Borrar «${doc.name}» de este móvil?`)) return;

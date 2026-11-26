@@ -213,3 +213,9 @@ export async function addDoc(file) {
 
 export const getDoc = (id) => get('docs', id);
 export const deleteDoc = (id) => remove('docs', id);
+export async function renameDoc(id, name) {
+  const d = await get('docs', id);
+  if (!d) return;
+  d.name = name;
+  return put('docs', d);
+}
