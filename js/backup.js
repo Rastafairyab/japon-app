@@ -24,7 +24,7 @@ export function backupCard() {
   card.innerHTML = `
     <h2 class="card-title">Copia de seguridad</h2>
     <p class="muted small">Los datos se guardan solo en este móvil. Exporta una copia de vez en cuando
-      y pásasela a tu compañero de viaje para que los dos tengáis lo mismo.</p>
+      y pásasela a tu compañero de viaje para que los dos tengáis lo mismo. Los documentos (PDF) no van en la copia: súbelos en cada móvil.</p>
     <div class="btn-row">
       <button type="button" class="btn-primary" data-act="export">Exportar</button>
       ${canShareFiles ? '<button type="button" data-act="share">Enviar…</button>' : ''}

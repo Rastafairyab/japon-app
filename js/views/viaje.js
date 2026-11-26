@@ -5,6 +5,7 @@ import {
 import { put, remove, setSetting, DATA_EVENT } from '../db.js';
 import { esc, uid, toast } from '../utils.js';
 import { backupCard } from '../backup.js';
+import { docsCard } from '../docs.js';
 import { coordsFromUrl } from '../geo.js';
 import { openForm } from '../form.js';
 import {
@@ -16,6 +17,7 @@ const SUBTABS = [
   ['vuelos', 'Vuelos'],
   ['alojamientos', 'Hoteles'],
   ['seguro', 'Seguro'],
+  ['docs', 'Docs'],
   ['datos', 'Datos'],
 ];
 const TYPES = [
@@ -102,6 +104,7 @@ function render() {
     case 'vuelos': view.innerHTML = flightsHTML(); break;
     case 'alojamientos': view.innerHTML = staysHTML(); break;
     case 'seguro': view.innerHTML = insuranceHTML(); break;
+    case 'docs': view.append(docsCard()); break;
     case 'datos': view.append(backupCard()); break;
     default: view.innerHTML = itineraryHTML();
   }

@@ -537,3 +537,16 @@ button:active, .btn:active { transform: scale(.98); }
 .cv-rate{font-size:1.5rem;margin:.25rem 0}
 .cv-input{font-size:1.4rem}
 .cv-table li{display:flex;justify-content:space-between}
+
+/* ===== Documentos (PDF/imágenes en el móvil) ===== */
+.doc-viewer{position:fixed;inset:0;z-index:1000;background:#000;display:flex;flex-direction:column}
+.doc-viewer-bar{display:flex;align-items:center;gap:10px;padding:calc(8px + env(safe-area-inset-top)) 12px 8px;background:#111318;color:#eee}
+.doc-viewer-bar a{color:#9cf}
+.doc-viewer-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.doc-viewer iframe,.doc-viewer img{flex:1;width:100%;border:0;min-height:0}
+.doc-viewer iframe{background:#fff}
+.doc-viewer img{object-fit:contain}
+.doc-list{list-style:none;padding:0;margin:.75rem 0 0}
+.doc-row{display:flex;align-items:center;gap:.5rem;padding:.5rem 0;border-top:1px solid var(--border)}
+.doc-info{flex:1;min-width:0;display:flex;flex-direction:column}
+.doc-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

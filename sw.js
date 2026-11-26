@@ -1,7 +1,7 @@
 // Service worker: guarda la app en caché para usarla sin conexión.
 // IMPORTANTE: cada vez que cambies cualquier archivo, sube el número de versión
 // para que los móviles descarguen la nueva versión.
-const VERSION = 'v17';
+const VERSION = 'v18';
 const CACHE = `japon-${VERSION}`;
 
 // Cachés que sobreviven a las versiones de la app:
@@ -28,6 +28,7 @@ const FILES = [
   './js/translate.js',
   './js/geo.js',
   './js/currency.js',
+  './js/docs.js',
   './js/views/hoy.js',
   './js/views/frases.js',
   './js/views/viaje.js',

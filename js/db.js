@@ -4,7 +4,8 @@ import { SEED, SEED_VERSION } from './seed.js';
 const DB_NAME = 'japon-2026';
 // v2: si existe una base de datos vacía o a medias (sin algún almacén), la
 // actualización crea los que falten. No borra nada.
-const DB_VERSION = 2;
+// v3: almacén 'docs' (PDF/imágenes). Va aparte de STORES: no entra en la copia de seguridad.
+const DB_VERSION = 3;
 export const APP_ID = 'japon-2026';
 export const EXPORT_FORMAT = 1;
 
@@ -36,6 +37,7 @@ export function openDB() {
             if (name === 'items') store.createIndex('date', 'date');
           }
         }
+        if (!db.objectStoreNames.contains('docs')) db.createObjectStore('docs', { keyPath: 'id' });
       };
       req.onsuccess = () => {
         const db = req.result;
@@ -195,3 +197,19 @@ export async function requestPersistence() {
     return false;
   }
 }
+
+// ===== Documentos (PDF/imágenes): solo en este móvil, no van en la copia =====
+
+export async function listDocs() {
+  const all = await getAll('docs');
+  return all.sort((a, b) => a.addedAt.localeCompare(b.addedAt));
+}
+
+export async function addDoc(file) {
+  const blob = new Blob([await file.arrayBuffer()], { type: file.type });
+  const id = 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  return put('docs', { id, name: file.name, type: file.type, size: file.size, blob, addedAt: new Date().toISOString() });
+}
+
+export const getDoc = (id) => get('docs', id);
+export const deleteDoc = (id) => remove('docs', id);
