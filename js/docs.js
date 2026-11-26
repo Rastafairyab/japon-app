@@ -1,7 +1,8 @@
 // Tarjeta "Documentos": PDF e imágenes guardados solo en este móvil (IndexedDB).
 // No se suben a ningún sitio ni van en la copia de seguridad.
-import { listDocs, addDoc, getDoc, deleteDoc, renameDoc, requestPersistence } from './db.js';
-import { esc, toast } from './utils.js';
+import { listDocs, addDoc, getDoc, deleteDoc, renameDoc, requestPersistence, put } from './db.js';
+import { esc, toast, uid } from './utils.js';
+import { openForm } from './form.js';
 
 function fmtSize(bytes) {
   if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
@@ -13,7 +14,7 @@ function fmtSize(bytes) {
 const PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
 let pdfjsPromise = null;
 
-function loadPdfJs() {
+export function loadPdfJs() {
   if (!pdfjsPromise) {
     pdfjsPromise = new Promise((resolve, reject) => {
       if (window.pdfjsLib) return resolve(window.pdfjsLib);
@@ -53,7 +54,7 @@ async function renderPdf(doc, box, isClosed) {
   pdf.destroy();
 }
 
-function openViewer(doc) {
+export function openViewer(doc) {
   const url = URL.createObjectURL(doc.blob);
   const isPdf = doc.type === 'application/pdf';
   const overlay = document.createElement('div');
@@ -100,6 +101,50 @@ function openViewer(doc) {
         <br><a href="${url}" target="_blank" rel="noopener">Abrir con otra app</a></p>`;
     });
   }
+}
+
+export async function openDocById(id) {
+  const doc = await getDoc(id);
+  if (doc) openViewer(doc);
+  else toast('Documento no encontrado en este móvil', { error: true });
+}
+
+// Texto de cada página del PDF (se lee solo en este móvil, no sale de aquí).
+export async function extractPdfText(doc) {
+  const pdfjsLib = await loadPdfJs();
+  const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(await doc.blob.arrayBuffer()) }).promise;
+  const pages = [];
+  for (let n = 1; n <= pdf.numPages; n++) {
+    const page = await pdf.getPage(n);
+    const tc = await page.getTextContent();
+    let text = '';
+    for (const it of tc.items) text += it.str + (it.hasEOL ? '\n' : ' ');
+    pages.push(text);
+  }
+  pdf.destroy();
+  return pages;
+}
+
+// Tras subir un documento: opcionalmente lo añade al itinerario.
+function askItinerary(rec) {
+  openForm({
+    title: 'Añadir al itinerario (opcional)',
+    fields: [
+      { name: 'title', label: 'Título', type: 'text' },
+      { name: 'date', label: 'Fecha', type: 'date', half: true },
+      { name: 'time', label: 'Hora', type: 'time', half: true },
+      { name: 'place', label: 'Destino', type: 'text' },
+    ],
+    values: { title: rec.name.replace(/\.[^.]+$/, '') },
+    onSave: async (v) => {
+      if (!v.date) return;
+      await put('items', {
+        id: uid(), type: 'reserva', title: v.title || rec.name, date: v.date,
+        time: v.time || '', place: v.place || '', docId: rec.id, updatedAt: new Date().toISOString(),
+      });
+      toast('Añadido al itinerario');
+    },
+  });
 }
 
 export function docsCard() {
@@ -168,10 +213,12 @@ export function docsCard() {
     const files = [...(fileInput.files ?? [])];
     if (!files.length) return;
     try {
-      for (const f of files) await addDoc(f);
+      const recs = [];
+      for (const f of files) recs.push(await addDoc(f));
       requestPersistence();
       toast(files.length === 1 ? 'Documento guardado' : `${files.length} documentos guardados`);
       render();
+      if (recs.length === 1) askItinerary(recs[0]);
     } catch (err) {
       console.error(err);
       toast('No se pudo guardar (¿falta espacio?)', { error: true });

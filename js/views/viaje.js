@@ -5,7 +5,8 @@ import {
 import { put, remove, setSetting, DATA_EVENT } from '../db.js';
 import { esc, uid, toast } from '../utils.js';
 import { backupCard } from '../backup.js';
-import { docsCard } from '../docs.js';
+import { docsCard, openDocById } from '../docs.js';
+import { trainsCard } from '../trains.js';
 import { coordsFromUrl } from '../geo.js';
 import { openForm } from '../form.js';
 import {
@@ -17,6 +18,7 @@ const SUBTABS = [
   ['vuelos', 'Vuelos'],
   ['alojamientos', 'Hoteles'],
   ['seguro', 'Seguro'],
+  ['trenes', 'Trenes'],
   ['docs', 'Docs'],
   ['datos', 'Datos'],
 ];
@@ -24,6 +26,7 @@ const TYPES = [
   { value: 'plan', label: 'Plan' },
   { value: 'reserva', label: 'Reserva' },
   { value: 'nota', label: 'Nota' },
+  { value: 'tren', label: 'Tren' },
 ];
 const TYPE_LABEL = Object.fromEntries(TYPES.map(t => [t.value, t.label]));
 
@@ -104,6 +107,7 @@ function render() {
     case 'vuelos': view.innerHTML = flightsHTML(); break;
     case 'alojamientos': view.innerHTML = staysHTML(); break;
     case 'seguro': view.innerHTML = insuranceHTML(); break;
+    case 'trenes': view.append(trainsCard()); break;
     case 'docs': view.append(docsCard()); break;
     case 'datos': view.append(backupCard()); break;
     default: view.innerHTML = itineraryHTML();
@@ -198,6 +202,7 @@ function itemRow(i, showDate = false) {
     i.placeJa && `<button type="button" class="btn-mini" data-act="show-place" data-id="${esc(i.id)}">Enseñar</button>`,
     (i.placeJa || i.place) && `<a class="btn-mini" href="${esc(mapsUrl(i.placeJa || i.place))}" target="_blank" rel="noopener">Maps</a>`,
     link && `<a class="btn-mini" href="${esc(link)}" target="_blank" rel="noopener">Enlace</a>`,
+    i.docId && `<button type="button" class="btn-mini" data-act="open-doc" data-id="${esc(i.docId)}">📄 Documento</button>`,
   ].filter(Boolean);
 
   return `
@@ -266,6 +271,7 @@ function onClick(e) {
     case 'add-stay': editStay(null); break;
     case 'edit-stay': editStay(trip.stays.find(s => s.id === id)); break;
     case 'edit-insurance': editInsurance(trip.insurance); break;
+    case 'open-doc': openDocById(id); break;
   }
 }
 
