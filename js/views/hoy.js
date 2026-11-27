@@ -7,7 +7,7 @@ import {
 import { esc } from '../utils.js';
 import { flightCard, flightStatus, stayCard, showTaxi, insuranceCard } from '../components.js';
 
-const TYPE_LABEL = { plan: 'Plan', reserva: 'Reserva', nota: 'Nota' };
+const TYPE_LABEL = { plan: 'Plan', reserva: 'Reserva', nota: 'Nota', tren: 'Tren' };
 
 let timer = null;
 let onVisible = null;

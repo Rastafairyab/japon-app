@@ -1,5 +1,6 @@
 // Arranque de la app: datos, navegación por pestañas y registro del service worker.
-import { ensureSeeded, requestPersistence, DATA_EVENT, getAll, getSetting } from './db.js';
+import { ensureSeeded, requestPersistence, DATA_EVENT, getAll, getSetting, put, setSetting } from './db.js';
+import { TREN_2512 } from './seed.js';
 
 // ===== Diagnóstico (solo al probar en localhost con serve.py) =====
 // Envía al ordenador un resumen del estado de la app en el móvil. En la versión
@@ -100,6 +101,13 @@ async function start() {
     console.error('No se pudieron cargar los datos iniciales', err);
     diagErrors.push(`ensureSeeded: ${err?.name} ${err?.message}`);
   }
+  // Añade el tren del 25/12 también en los móviles que ya tenían la app instalada.
+  try {
+    if (!(await getSetting('migTren2512', false))) {
+      await put('items', { ...TREN_2512, updatedAt: new Date().toISOString() });
+      await setSetting('migTren2512', true);
+    }
+  } catch (err) { console.error(err); }
   window.addEventListener('hashchange', route);
   route();
   requestPersistence();

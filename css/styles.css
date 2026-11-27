@@ -215,6 +215,7 @@ a { color: #ff8a8e; }
 .pre { white-space: pre-line; }
 .tag-reserva { background: #3dd68c22; color: var(--ok); }
 .tag-nota { background: #f5b74f22; color: var(--warn); }
+.tag-tren { background: #4da3ff22; color: #4da3ff; }
 .tag-flight, .tag-stay { background: var(--accent-soft); color: #ffb3b5; }
 
 .flight-card.is-past { opacity: .6; }

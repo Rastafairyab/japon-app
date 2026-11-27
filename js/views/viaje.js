@@ -24,6 +24,7 @@ const TYPES = [
   { value: 'plan', label: 'Plan' },
   { value: 'reserva', label: 'Reserva' },
   { value: 'nota', label: 'Nota' },
+  { value: 'tren', label: 'Tren' },
 ];
 const TYPE_LABEL = Object.fromEntries(TYPES.map(t => [t.value, t.label]));
 
